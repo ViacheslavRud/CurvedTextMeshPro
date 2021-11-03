@@ -22,12 +22,10 @@
 
 //Code inspired by the one of the WarpTextExample of TextMeshPro package
 
-using UnityEngine;
-using System.Collections;
 using TMPro;
-using System;
+using UnityEngine;
 
-namespace ntw.CurvedTextMeshPro
+namespace Ntw.CurvedTextMeshPro
 {
     /// <summary>
     /// Base class for drawing a Text Pro text following a particular curve
@@ -38,19 +36,19 @@ namespace ntw.CurvedTextMeshPro
         /// <summary>
         /// The text component of interest
         /// </summary>
-        private TMP_Text m_TextComponent;
+        private TMP_Text _textComponent;
 
         /// <summary>
         /// True if the text must be updated at this frame 
         /// </summary>
-        private bool m_forceUpdate;
+        private bool _forceUpdate;
 
         /// <summary>
         /// Awake
         /// </summary>
         private void Awake()
         {
-            m_TextComponent = gameObject.GetComponent<TMP_Text>();
+            _textComponent = gameObject.GetComponent<TMP_Text>();
         }
 
         /// <summary>
@@ -59,7 +57,7 @@ namespace ntw.CurvedTextMeshPro
         private void OnEnable()
         {
             //every time the object gets enabled, we have to force a re-creation of the text mesh
-            m_forceUpdate = true;
+            _forceUpdate = true;
         }
 
         /// <summary>
@@ -68,23 +66,21 @@ namespace ntw.CurvedTextMeshPro
         protected void Update()
         {
             //if the text and the parameters are the same of the old frame, don't waste time in re-computing everything
-            if (!m_forceUpdate && !m_TextComponent.havePropertiesChanged && !ParametersHaveChanged())
+            if (!_forceUpdate && !_textComponent.havePropertiesChanged && !ParametersHaveChanged())
             {
                 return;
             }
 
-            m_forceUpdate = false;
+            _forceUpdate = false;
 
             //during the loop, vertices represents the 4 vertices of a single character we're analyzing, 
             //while matrix is the roto-translation matrix that will rotate and scale the characters so that they will
             //follow the curve
-            Vector3[] vertices;
-            Matrix4x4 matrix;
 
             //Generate the mesh and get information about the text and the characters
-            m_TextComponent.ForceMeshUpdate();
+            _textComponent.ForceMeshUpdate();
 
-            TMP_TextInfo textInfo = m_TextComponent.textInfo;
+            var textInfo = _textComponent.textInfo;
             int characterCount = textInfo.characterCount;
 
             //if the string is empty, no need to waste time
@@ -92,8 +88,8 @@ namespace ntw.CurvedTextMeshPro
                 return;
 
             //gets the bounds of the rectangle that contains the text 
-            float boundsMinX = m_TextComponent.bounds.min.x;
-            float boundsMaxX = m_TextComponent.bounds.max.x;
+            float boundsMinX = _textComponent.bounds.min.x;
+            float boundsMaxX = _textComponent.bounds.max.x;
 
             //for each character
             for (int i = 0; i < characterCount; i++)
@@ -106,7 +102,7 @@ namespace ntw.CurvedTextMeshPro
                 //the 4 vertices of the rect that encloses this character. Store them in vertices
                 int vertexIndex = textInfo.characterInfo[i].vertexIndex;
                 int materialIndex = textInfo.characterInfo[i].materialReferenceIndex;
-                vertices = textInfo.meshInfo[materialIndex].vertices;
+                var vertices = textInfo.meshInfo[materialIndex].vertices;
 
                 //Compute the baseline mid point for each character. This is the central point of the character.
                 //we will use this as the point representing this character for the geometry transformations
@@ -125,7 +121,7 @@ namespace ntw.CurvedTextMeshPro
 
                 //get the transformation matrix, that maps the vertices, seen as offset from the central character point, to their final
                 //position that follows the curve
-                matrix = ComputeTransformationMatrix(charMidBaselinePos, zeroToOnePos, textInfo, i);
+                var matrix = ComputeTransformationMatrix(charMidBaselinePos, zeroToOnePos, textInfo, i);
 
                 //apply the transformation, and obtain the final position and orientation of the 4 vertices representing this char
                 vertices[vertexIndex + 0] = matrix.MultiplyPoint3x4(vertices[vertexIndex + 0]);
@@ -135,7 +131,7 @@ namespace ntw.CurvedTextMeshPro
             }
 
             //Upload the mesh with the revised information
-            m_TextComponent.UpdateVertexData();
+            _textComponent.UpdateVertexData();
         }
 
         /// <summary>
@@ -148,7 +144,7 @@ namespace ntw.CurvedTextMeshPro
         /// Computes the transformation matrix that maps the offsets of the vertices of each single character from
         /// the character's center to the final destinations of the vertices so that the text follows a curve
         /// </summary>
-        /// <param name="charMidBaselinePosfloat">Position of the central point of the character</param>
+        /// <param name="charMidBaselinePos">Position of the central point of the character</param>
         /// <param name="zeroToOnePos">Horizontal position of the character relative to the bounds of the box, in a range [0, 1]</param>
         /// <param name="textInfo">Information on the text that we are showing</param>
         /// <param name="charIdx">Index of the character we have to compute the transformation for</param>
