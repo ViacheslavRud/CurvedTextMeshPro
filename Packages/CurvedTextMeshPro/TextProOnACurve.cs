@@ -36,7 +36,7 @@ namespace Ntw.CurvedTextMeshPro
         /// <summary>
         /// The text component of interest
         /// </summary>
-        private TMP_Text _textComponent;
+        protected TMP_Text TextComponent;
 
         /// <summary>
         /// True if the text must be updated at this frame 
@@ -48,7 +48,7 @@ namespace Ntw.CurvedTextMeshPro
         /// </summary>
         private void Awake()
         {
-            _textComponent = gameObject.GetComponent<TMP_Text>();
+            TextComponent = gameObject.GetComponent<TMP_Text>();
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Ntw.CurvedTextMeshPro
         protected void Update()
         {
             //if the text and the parameters are the same of the old frame, don't waste time in re-computing everything
-            if (!_forceUpdate && !_textComponent.havePropertiesChanged && !ParametersHaveChanged())
+            if (!_forceUpdate && !TextComponent.havePropertiesChanged && !ParametersHaveChanged())
             {
                 return;
             }
@@ -78,9 +78,9 @@ namespace Ntw.CurvedTextMeshPro
             //follow the curve
 
             //Generate the mesh and get information about the text and the characters
-            _textComponent.ForceMeshUpdate();
+            TextComponent.ForceMeshUpdate();
 
-            var textInfo = _textComponent.textInfo;
+            var textInfo = TextComponent.textInfo;
             int characterCount = textInfo.characterCount;
 
             //if the string is empty, no need to waste time
@@ -88,8 +88,8 @@ namespace Ntw.CurvedTextMeshPro
                 return;
 
             //gets the bounds of the rectangle that contains the text 
-            float boundsMinX = _textComponent.bounds.min.x;
-            float boundsMaxX = _textComponent.bounds.max.x;
+            float boundsMinX = TextComponent.bounds.min.x;
+            float boundsMaxX = TextComponent.bounds.max.x;
 
             //for each character
             for (int i = 0; i < characterCount; i++)
@@ -131,7 +131,7 @@ namespace Ntw.CurvedTextMeshPro
             }
 
             //Upload the mesh with the revised information
-            _textComponent.UpdateVertexData();
+            TextComponent.UpdateVertexData();
         }
 
         /// <summary>
