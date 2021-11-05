@@ -37,15 +37,38 @@ namespace Ntw.CurvedTextMeshPro
         /// The radius of the text circle arc
         /// </summary>
         [SerializeField]
-        [Tooltip("The radius of the text circle arc")]
+        [Tooltip("The radius of the text circle arc.")]
         private float _radius = 10.0f;
 
         [SerializeField]
-        [Tooltip("The Y offset of the text circle center")]
+        [Tooltip("The Y offset of the text circle center.")]
         private float _yOffset;
 
         [SerializeField]
+        [Tooltip("Change Y Offset in accordance with radius considering font size.")]
         private bool _compensateRadius;
+        
+        /// <summary>
+        /// Some multiplier to adjust text size to circle dimensions.
+        /// </summary>
+       [Tooltip("To adjust font size influence")]
+       [SerializeField]
+        private float _radiusCompensationMultiplier = 30;
+
+        /// <summary>
+        /// Limits distance between symbols whatever to keep symbols together.
+        /// </summary>
+        [Tooltip("Keep symbols together.")]
+        [SerializeField]
+        private bool _fixedLetterSpacing;
+
+        /// <summary>
+        /// Some multiplier to adjust text size to circle dimensions.
+        /// </summary>
+        [SerializeField]
+        private float _letterSpacingMultiplier = 30;
+
+
 
         /// <summary>
         /// How much degrees the text arc should span
@@ -71,58 +94,15 @@ namespace Ntw.CurvedTextMeshPro
         [SerializeField]
         [Tooltip("The maximum angular distance between letters, in degrees")]
         private int _maxDegreesPerLetter = 360;
-
-        /// <summary>
-        /// Previous value of <see cref="_radius"/>
-        /// </summary>
-        private float _oldRadius = float.MaxValue;
-
-        /// <summary>
-        /// Previous value of <see cref="_arcDegrees"/>
-        /// </summary>
-        private float _oldArcDegrees = float.MaxValue;
-
-        /// <summary>
-        /// Previous value of <see cref="_angularOffset"/>
-        /// </summary>
-        private float _oldAngularOffset = float.MaxValue;
-
-        /// <summary>
-        /// Previous value of <see cref="_maxDegreesPerLetter"/>
-        /// </summary>
-        private float _oldMaxDegreesPerLetter = float.MaxValue;
-
-        private float _oldYOffset = float.MaxValue;
-
+        
+        
         private new void Update()
         {
             TextComponent ??= gameObject.GetComponent<TMP_Text>();
             if (_compensateRadius)
-                _yOffset = -_radius / (TextComponent.fontSize / 30);
+                _yOffset = -_radius / (TextComponent.fontSize / _radiusCompensationMultiplier);
 
             base.Update();
-        }
-
-        /// <summary>
-        /// Method executed at every frame that checks if some parameters have been changed
-        /// </summary>
-        /// <returns></returns>
-        protected override bool ParametersHaveChanged()
-        {
-            //check if parameters have changed and update the old values for next frame iteration
-            bool retVal = _radius != _oldRadius ||
-                          _arcDegrees != _oldArcDegrees ||
-                          _angularOffset != _oldAngularOffset ||
-                          _maxDegreesPerLetter != _oldMaxDegreesPerLetter ||
-                          _yOffset != _oldYOffset;
-
-            _oldRadius = _radius;
-            _oldArcDegrees = _arcDegrees;
-            _oldAngularOffset = _angularOffset;
-            _oldMaxDegreesPerLetter = _maxDegreesPerLetter;
-            _oldYOffset = _yOffset;
-
-            return retVal;
         }
 
         /// <summary>
@@ -131,13 +111,14 @@ namespace Ntw.CurvedTextMeshPro
         /// </summary>
         /// <param name="charMidBaselinePos">Position of the central point of the character</param>
         /// <param name="zeroToOnePos">Horizontal position of the character relative to the bounds of the box, in a range [0, 1]</param>
-        /// <param name="textInfo">Information on the text that we are showing</param>
+        /// <param name="text">Information on the text that we are showing</param>
         /// <param name="charIdx">Index of the character we have to compute the transformation for</param>
         /// <returns>Transformation matrix to be applied to all vertices of the text</returns>
-        protected override Matrix4x4 ComputeTransformationMatrix(Vector3 charMidBaselinePos, float zeroToOnePos, TMP_TextInfo textInfo, int charIdx)
+        protected override Matrix4x4 ComputeTransformationMatrix(Vector3 charMidBaselinePos, float zeroToOnePos, int charIdx)
         {
+            float letterDegrees = _fixedLetterSpacing ? (180 * TextComponent.fontSize / _letterSpacingMultiplier) / (Mathf.PI * _radius) : _maxDegreesPerLetter;
             //calculate the actual degrees of the arc considering the maximum distance between letters
-            float actualArcDegrees = Mathf.Min(_arcDegrees, textInfo.characterCount / textInfo.lineCount * _maxDegreesPerLetter);
+            float actualArcDegrees = Mathf.Min(_arcDegrees, (float)TextComponent.textInfo.characterCount / TextComponent.textInfo.lineCount * letterDegrees);
 
             //compute the angle at which to show this character.
             //We want the string to be centered at the top point of the circle, so we first convert the position from a range [0, 1]
@@ -148,7 +129,7 @@ namespace Ntw.CurvedTextMeshPro
             //Notice that we have to do some extra calculations because we have to take in count that text may be on multiple lines
             float x0 = Mathf.Cos(angle);
             float y0 = Mathf.Sin(angle);
-            float radiusForThisLine = _radius - textInfo.lineInfo[0].lineExtents.max.y * textInfo.characterInfo[charIdx].lineNumber;
+            float radiusForThisLine = _radius - TextComponent.textInfo.lineInfo[0].lineExtents.max.y * TextComponent.textInfo.characterInfo[charIdx].lineNumber;
             var newMidBaselinePos = new Vector2(x0 * radiusForThisLine, -y0 * radiusForThisLine); //actual new position of the character
 
             //compute the transformation matrix: move the points to the just found position, then rotate the character to fit the angle of the curve 

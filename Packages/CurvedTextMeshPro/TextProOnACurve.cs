@@ -33,6 +33,8 @@ namespace Ntw.CurvedTextMeshPro
     [ExecuteInEditMode]
     public abstract class TextProOnACurve : MonoBehaviour
     {
+        private Transform _transform;
+        
         /// <summary>
         /// The text component of interest
         /// </summary>
@@ -60,13 +62,18 @@ namespace Ntw.CurvedTextMeshPro
             _forceUpdate = true;
         }
 
+        private void OnValidate()
+        {
+            _forceUpdate = true;
+        }
+
         /// <summary>
         /// Update
         /// </summary>
         protected void Update()
         {
             //if the text and the parameters are the same of the old frame, don't waste time in re-computing everything
-            if (!_forceUpdate && !TextComponent.havePropertiesChanged && !ParametersHaveChanged())
+            if (!_forceUpdate && !TextComponent.havePropertiesChanged && !transform.hasChanged)
             {
                 return;
             }
@@ -121,7 +128,7 @@ namespace Ntw.CurvedTextMeshPro
 
                 //get the transformation matrix, that maps the vertices, seen as offset from the central character point, to their final
                 //position that follows the curve
-                var matrix = ComputeTransformationMatrix(charMidBaselinePos, zeroToOnePos, textInfo, i);
+                var matrix = ComputeTransformationMatrix(charMidBaselinePos, zeroToOnePos, i);
 
                 //apply the transformation, and obtain the final position and orientation of the 4 vertices representing this char
                 vertices[vertexIndex + 0] = matrix.MultiplyPoint3x4(vertices[vertexIndex + 0]);
@@ -135,20 +142,14 @@ namespace Ntw.CurvedTextMeshPro
         }
 
         /// <summary>
-        /// Method executed at every frame that checks if some parameters have been changed
-        /// </summary>
-        /// <returns></returns>
-        protected abstract bool ParametersHaveChanged();
-
-        /// <summary>
         /// Computes the transformation matrix that maps the offsets of the vertices of each single character from
         /// the character's center to the final destinations of the vertices so that the text follows a curve
         /// </summary>
         /// <param name="charMidBaselinePos">Position of the central point of the character</param>
         /// <param name="zeroToOnePos">Horizontal position of the character relative to the bounds of the box, in a range [0, 1]</param>
-        /// <param name="textInfo">Information on the text that we are showing</param>
+        /// <param name="text">Information on the text that we are showing</param>
         /// <param name="charIdx">Index of the character we have to compute the transformation for</param>
         /// <returns>Transformation matrix to be applied to all vertices of the text</returns>
-        protected abstract Matrix4x4 ComputeTransformationMatrix(Vector3 charMidBaselinePos, float zeroToOnePos, TMP_TextInfo textInfo, int charIdx);
+        protected abstract Matrix4x4 ComputeTransformationMatrix(Vector3 charMidBaselinePos, float zeroToOnePos, int charIdx);
     }
 }
