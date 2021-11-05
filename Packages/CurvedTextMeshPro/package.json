@@ -1,6 +1,6 @@
 {
   "name": "com.antony-vitillo.curved-text-mesh-pro",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "displayName": "Curved Text Mesh Pro",
   "description": "A simple plugin to make curved TextMeshPro texts that follow a mathematical function specified by code.",
   "dependencies": {

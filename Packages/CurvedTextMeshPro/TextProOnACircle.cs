@@ -49,13 +49,6 @@ namespace Ntw.CurvedTextMeshPro
         private bool _compensateRadius;
         
         /// <summary>
-        /// Some multiplier to adjust text size to circle dimensions.
-        /// </summary>
-       [Tooltip("To adjust font size influence")]
-       [SerializeField]
-        private float _radiusCompensationMultiplier = 30;
-
-        /// <summary>
         /// Limits distance between symbols whatever to keep symbols together.
         /// </summary>
         [Tooltip("Keep symbols together.")]
@@ -100,7 +93,7 @@ namespace Ntw.CurvedTextMeshPro
         {
             TextComponent ??= gameObject.GetComponent<TMP_Text>();
             if (_compensateRadius)
-                _yOffset = -_radius / (TextComponent.fontSize / _radiusCompensationMultiplier);
+                _yOffset = -_radius;
 
             base.Update();
         }
